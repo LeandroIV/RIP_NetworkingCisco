@@ -8,7 +8,7 @@ HOST = '127.0.0.1'
 PORT = 65432  # You can use any available port
 
 # Initialize Gemini handler with the API key
-gemini_handler = GeminiHandler(api_key='AIzaSyAOQ9GIThEhIz68y6xEfDHdWmuNNiYSdCQ')
+gemini_handler = GeminiHandler(api_key='API_KEY_HERE')
 
 def handle_client_connection(client_socket):
     try:
