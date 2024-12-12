@@ -2,7 +2,7 @@
 import google.generativeai as genai
 
 # Replace with your actual Gemini API key
-API_KEY = 'AIzaSyAOQ9GIThEhIz68y6xEfDHdWmuNNiYSdCQ'
+API_KEY = 'API_KEY_HERE'
 
 class GeminiHandler:
     def __init__(self, api_key):
