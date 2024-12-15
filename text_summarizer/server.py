@@ -10,7 +10,7 @@ PORT = 65432
 CHUNK_SIZE = 8192  # 8KB chunks for transfer
 
 # Initialize Gemini handler with the API key
-gemini_handler = GeminiHandler(api_key='API_KEY_HERE')
+gemini_handler = GeminiHandler(api_key='AIzaSyAOQ9GIThEhIz68y6xEfDHdWmuNNiYSdCQ')
 
 def receive_data(sock):
     """
