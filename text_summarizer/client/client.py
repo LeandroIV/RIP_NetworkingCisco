@@ -24,6 +24,45 @@ class ProcessingThread(QThread):
         self.connection = ClientConnection()
         self.transfer = ClientFileTransfer()
 
+    def log_progress(self, message):
+        """Log progress to both terminal and GUI"""
+        print(f"Client: {message}")  # Terminal output
+        self.progress.emit(message)  # GUI output
+
+    def perform_handshake(self):
+        """Perform initial handshake with server"""
+        try:
+            self.log_progress("Initiating handshake...")
+            self.transfer.send_to_server(self.connection._socket, "HELLO Server")
+            self.log_progress("Sent greeting to server: HELLO Server")
+            
+            response = self.transfer.receive_from_server(self.connection._socket)
+            self.log_progress(f"Received server response: {response}")
+            
+            if response != "READY":
+                raise Exception("Server not ready. Unexpected response during handshake.")
+            
+            self.log_progress("Handshake completed successfully")
+        except Exception as e:
+            raise Exception(f"Handshake failed: {str(e)}")
+
+    def complete_transfer(self):
+        """Send transfer complete message and wait for acknowledgment"""
+        try:
+            self.log_progress("Sending transfer complete message...")
+            self.transfer.send_to_server(self.connection._socket, "TRANSFER COMPLETE")
+            
+            self.log_progress("Waiting for server acknowledgment...")
+            response = self.transfer.receive_from_server(self.connection._socket)
+            self.log_progress(f"Received server response: {response}")
+            
+            if response != "TRANSFER ACKNOWLEDGED":
+                raise Exception("Transfer completion not acknowledged properly")
+            
+            self.log_progress("Transfer completion protocol finished")
+        except Exception as e:
+            raise Exception(f"Transfer completion protocol failed: {str(e)}")
+
     def extract_text_from_pdf(self, file_path):
         """Extract text content from PDF file"""
         text_content = []
@@ -31,7 +70,7 @@ class ProcessingThread(QThread):
             with fitz.open(file_path) as doc:
                 total_pages = len(doc)
                 for page_num, page in enumerate(doc, 1):
-                    self.progress.emit(f"Processing page {page_num}/{total_pages}")
+                    self.log_progress(f"Processing page {page_num}/{total_pages}")
                     text = page.get_text("text")
                     if text.strip():
                         text_content.append(clean_text(text))
@@ -41,6 +80,8 @@ class ProcessingThread(QThread):
 
     def read_file(self):
         """Read and extract text from supported file types"""
+        self.log_progress(f"Reading file: {self.file_path}")
+        
         if not os.path.exists(self.file_path):
             raise FileNotFoundError("The specified file does not exist.")
 
@@ -52,6 +93,7 @@ class ProcessingThread(QThread):
             try:
                 doc = Document(self.file_path)
                 text = "\n".join([clean_text(para.text) for para in doc.paragraphs])
+                self.log_progress("Successfully read DOCX file")
                 return text
             except Exception as e:
                 raise Exception(f"Error reading DOCX file: {str(e)}")
@@ -61,29 +103,44 @@ class ProcessingThread(QThread):
     def run(self):
         try:
             # Read file
-            self.progress.emit("Reading file...")
+            self.log_progress("Starting file processing...")
             text = self.read_file()
+            self.log_progress("File reading completed")
             
             # Create and connect socket
-            self.progress.emit("Connecting to server...")
+            self.log_progress("Creating socket connection...")
             self.connection.create_socket()
             self.connection.connect_to_server()
+            self.log_progress("Connected to server successfully")
+            
+            # Perform handshake
+            self.perform_handshake()
             
             # Prepare and send request
+            self.log_progress("Preparing request...")
             request = create_client_request("summarize", text)
-            self.progress.emit("Sending request to server...")
+            self.log_progress("Sending request to server...")
             self.transfer.send_to_server(self.connection._socket, request)
             
             # Receive response
-            self.progress.emit("Waiting for server response...")
+            self.log_progress("Waiting for server response...")
             response = self.transfer.receive_from_server(self.connection._socket)
+            self.log_progress("Received server response")
             
+            # Complete transfer
+            self.complete_transfer()
+            
+            self.log_progress("Processing completed successfully")
             self.finished.emit(response)
             
         except Exception as e:
-            self.error.emit(str(e))
+            error_msg = str(e)
+            self.log_progress(f"Error: {error_msg}")
+            self.error.emit(error_msg)
         finally:
+            self.log_progress("Closing connection...")
             self.connection.close()
+            self.log_progress("Connection closed")
 
 class DropArea(QFrame):
     def __init__(self, parent=None):

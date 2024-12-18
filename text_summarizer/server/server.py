@@ -17,46 +17,57 @@ class DocumentServer:
             raise
 
     def handle_client(self, client_socket, address):
-        print(f"Handling client from {address}")
-        try:
-            # Receive request
-            request = self.transfer.receive_from_client(client_socket)
-            
-            # Removed print statement that prints the whole document
-            # print(f"Received request: {request}")
-            
-            # Process request
-            operation = request.get('operation')
-            text = request.get('data')
-            
-            if operation == "summarize":
-                if not text:
-                    response = create_server_response("error", message="No text provided")
+            print(f"Handling client from {address}")
+            try:
+                # Handle handshake
+                greeting = self.transfer.receive_from_client(client_socket)
+                if greeting != "HELLO Server":
+                    raise Exception("Invalid handshake greeting")
+                self.transfer.send_to_client(client_socket, "READY")
+                print(f"Handshake completed with client {address}")
+                
+                # Receive request
+                request = self.transfer.receive_from_client(client_socket)
+                
+                # Process request
+                operation = request.get('operation')
+                text = request.get('data')
+                
+                if operation == "summarize":
+                    if not text:
+                        response = create_server_response("error", message="No text provided")
+                    else:
+                        result = self.gemini_handler.summarize_text(text)
+                        response = create_server_response("success", data=result)
                 else:
-                    result = self.gemini_handler.summarize_text(text)
-                    response = create_server_response("success", data=result)
-            else:
-                response = create_server_response("error", message=f"Invalid operation: {operation}")
-            
-            # Send response
-            self.transfer.send_to_client(client_socket, response)
-            print(f"Response sent to client {address}")
-            
-        except Exception as e:
-            print(f"Error handling client {address}: {e}")
-            try:
-                self.transfer.send_to_client(
-                    client_socket, 
-                    create_server_response("error", message=str(e))
-                )
-            except Exception as send_error:
-                print(f"Failed to send error response to client {address}: {send_error}")
-        finally:
-            try:
-                client_socket.close()
-                print(f"Closed connection to client {address}")
+                    response = create_server_response("error", message=f"Invalid operation: {operation}")
+                
+                # Send response
+                self.transfer.send_to_client(client_socket, response)
+                print(f"Response sent to client {address}")
+                
+                # Handle transfer completion
+                completion_msg = self.transfer.receive_from_client(client_socket)
+                if completion_msg != "TRANSFER COMPLETE":
+                    raise Exception("Invalid transfer completion message")
+                self.transfer.send_to_client(client_socket, "TRANSFER ACKNOWLEDGED")
+                print(f"Transfer completion acknowledged for client {address}")
+                
             except Exception as e:
-                print(f"Error closing client socket {address}: {e}")
+                print(f"Error handling client {address}: {e}")
+                try:
+                    self.transfer.send_to_client(
+                        client_socket, 
+                        create_server_response("error", message=str(e))
+                    )
+                except Exception as send_error:
+                    print(f"Failed to send error response to client {address}: {send_error}")
+            finally:
+                try:
+                    client_socket.close()
+                    print(f"Closed connection to client {address}")
+                except Exception as e:
+                    print(f"Error closing client socket {address}: {e}")
 
     def start(self):
         try:
