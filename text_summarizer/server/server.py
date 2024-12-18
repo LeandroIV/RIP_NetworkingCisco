@@ -10,7 +10,6 @@ class DocumentServer:
         self.connection = ServerConnection(host, port)
         self.transfer = ServerFileTransfer()
         try:
-            # Hardcoded Gemini API Key
             GEMINI_API_KEY = 'AIzaSyAOQ9GIThEhIz68y6xEfDHdWmuNNiYSdCQ'
             self.gemini_handler = GeminiHandler(api_key=GEMINI_API_KEY)
         except Exception as e:
