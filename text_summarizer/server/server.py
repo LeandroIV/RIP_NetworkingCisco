@@ -22,6 +22,9 @@ class DocumentServer:
             # Receive request
             request = self.transfer.receive_from_client(client_socket)
             
+            # Removed print statement that prints the whole document
+            # print(f"Received request: {request}")
+            
             # Process request
             operation = request.get('operation')
             text = request.get('data')
