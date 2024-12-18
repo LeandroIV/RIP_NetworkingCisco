@@ -22,7 +22,6 @@ class DocumentServer:
         try:
             # Receive request
             request = self.transfer.receive_from_client(client_socket)
-            print(f"Received request: {request}")
             
             # Process request
             operation = request.get('operation')

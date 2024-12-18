@@ -1,4 +1,4 @@
-# server/file_transfer.py
+# file_transfer.py
 from typing import BinaryIO, Any
 import json
 from utils import serialize_server_data, deserialize_server_data

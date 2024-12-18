@@ -1,4 +1,4 @@
-# server/connection.py
+# connection.py
 import socket
 from utils import format_error
 

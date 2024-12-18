@@ -1,4 +1,4 @@
-# server/utils.py
+# utils.py
 import traceback
 import json
 from typing import Any, Dict

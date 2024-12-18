@@ -1,3 +1,4 @@
+# gemini_handler.py
 import google.generativeai as genai
 
 API_KEY = 'AIzaSyAOQ9GIThEhIz68y6xEfDHdWmuNNiYSdCQ'
