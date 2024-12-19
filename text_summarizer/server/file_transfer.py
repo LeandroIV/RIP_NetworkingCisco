@@ -3,6 +3,7 @@ from typing import BinaryIO, Any
 import json
 from utils import serialize_server_data, deserialize_server_data
 
+# file_transfer.py
 class ServerFileTransfer:
     def __init__(self, chunk_size: int = 8192):
         self.chunk_size = chunk_size
@@ -22,11 +23,14 @@ class ServerFileTransfer:
                 if not chunk:
                     raise Exception("Client connection closed prematurely")
                 received_data += chunk
+                # Send acknowledgment for the received chunk
                 client_socket.send(b'ok')
-            
+                print(f"Acknowledged receipt of chunk: {len(received_data)}/{total_length} bytes")
+
             return deserialize_server_data(received_data)
         except Exception as e:
             raise Exception(f"Server receive error: {str(e)}")
+
 
     def send_to_client(self, client_socket: Any, data: Any) -> None:
         """Send data to client using chunked protocol"""
