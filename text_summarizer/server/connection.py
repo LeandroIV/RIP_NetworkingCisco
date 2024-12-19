@@ -11,13 +11,12 @@ class ServerConnection:
     def create_socket(self):
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # Add socket reuse option to prevent "Address already in use" errors
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self._socket.bind((self.host, self.port))
             self._socket.listen(5)
             print(f"Socket created, listening on {self.host}:{self.port}")
             return self._socket
-        except Exception as e:
+        except Exception as e: 
             print(f"Error creating socket: {e}")
             raise Exception(f"Failed to create server socket: {format_error(e)}")
 

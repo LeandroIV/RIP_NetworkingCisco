@@ -80,7 +80,7 @@ class DocumentServer:
                     target=self.handle_client,
                     args=(client_socket, address)
                 )
-                client_thread.daemon = True  # Make thread daemon so it exits when main thread exits
+                client_thread.daemon = True
                 client_thread.start()
                 print(f"Started handling thread for client {address}")
                 
